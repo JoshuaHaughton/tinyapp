@@ -1,4 +1,3 @@
-
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
@@ -46,16 +45,25 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new");
 });
 
-app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
-  res.render("urls_show", templateVars);
-});
 
 app.post("/urls", (req, res) => {
   console.log(req.body);
   let short = generateRandomString();
   urlDatabase[short] = req.body.longURL;
   res.redirect(`/urls/${[short]}`);
+});
+
+
+app.post("/urls/:shortURL/delete", (req, res) => {
+  delete urlDatabase[req.params.shortURL]
+  res.redirect(`/urls`);
+});
+
+
+
+app.get("/urls/:shortURL", (req, res) => {
+  const templateVars = { shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL] };
+  res.render("urls_show", templateVars);
 });
 
 
