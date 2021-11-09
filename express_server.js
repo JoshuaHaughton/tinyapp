@@ -1,5 +1,7 @@
 const express = require("express");
 const app = express();
+const cookieParser = require("cookie-parser");
+app.use(cookieParser())
 const PORT = 8080; // default port 8080
 
 function generateRandomString() {
@@ -38,16 +40,27 @@ app.get("/hello", (req, res) => {
 
 app.get('/urls', (req, res) => {
   const templateVars = {
-    username: req.cookies['username'],
     urls: urlDatabase
   };
+  if (req.cookies) {
+    if (req.cookies['username']) {
+        templateVars['username'] = req.cookies['username'];
+      }
+  }
   res.render('urls_index', templateVars);
 })
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    username: req.cookies['username']
+    urls: urlDatabase
   }
+  console.log(req.cookies);
+  if (req.cookies) {
+    if (req.cookies['username']) {
+        templateVars['username'] = req.cookies['username'];
+      }
+  }
+  
   res.render("urls_new", templateVars);
 });
 
@@ -60,9 +73,14 @@ app.post("/urls", (req, res) => {
 });
 
 app.post("/login", (req, res) => {
-  console.log(req.body);
   let username = req.body.username;
   res.cookie('username', username);
+  console.log(req.body);
+  res.redirect(`/urls`);
+});
+
+app.post("/logout", (req, res) => {
+  res.clearCookie('username')
   res.redirect(`/urls`);
 });
 
@@ -80,10 +98,15 @@ app.post("/urls/:shortURL/update", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { 
-    username: req.cookies['username'],
     shortURL: req.params.shortURL, 
     longURL: urlDatabase[req.params.shortURL] 
 };
+
+if (req.cookies) {
+  if (req.cookies['username']) {
+      templateVars['username'] = req.cookies['username'];
+    }
+}
   res.render("urls_show", templateVars);
 });
 
@@ -92,7 +115,6 @@ app.get("/u/:shortURL", (req, res) => {
   const longURL = urlDatabase[req.params.shortURL]
   res.redirect(longURL);
 });
-
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
