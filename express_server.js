@@ -145,7 +145,6 @@ app.get('/register', (req, res) => {
 
 app.post("/urls", (req, res) => {
   if (req.cookies['user_id']) {
-    console.log(req.body);
     let short = generateRandomString();
     let obj = {
       longURL: req.body.longURL,
@@ -240,23 +239,51 @@ app.post("/urls/:shortURL/update", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  const templateVars = { 
-    shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL]['longURL']
-};
-
-if (req.cookies) {
   if (req.cookies['user_id']) {
-      templateVars['user'] = users[req.cookies['user_id']];
+
+    if (!urlDatabase[req.params.shortURL]) {
+      const e = new Error('ERROR! This short URL does not exist')
+      e.status = 403;
+      throw e;
     }
+
+
+
+    if (req.cookies['user_id'] === urlDatabase[req.params.shortURL]['userID'] || urlDatabase[req.params.shortURL]['userID'] === '') {
+      const templateVars = { 
+        shortURL: req.params.shortURL, 
+        longURL: urlDatabase[req.params.shortURL]['longURL']
+    };
+    
+    templateVars['user'] = users[req.cookies['user_id']];
+    
+    res.render("urls_show", templateVars);
+
+  } else {
+    const e = new Error('ERROR! You do not own this link!')
+    e.status = 403;
+    throw e;
+  }
+
+} else {
+  res.redirect('/login')
 }
-  res.render("urls_show", templateVars);
+  
+
+
 });
 
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]['longURL']
-  res.redirect(longURL);
+  if(urlDatabase[req.params.shortURL]){
+    const longURL = urlDatabase[req.params.shortURL]['longURL']
+    res.redirect(longURL);
+  } else {
+    const e = new Error('ERROR 400! This short URL does not exist.');
+    e.status = 400;
+    throw e;
+  }
+  
 });
 
 app.listen(PORT, () => {
