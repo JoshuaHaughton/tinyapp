@@ -16,6 +16,16 @@ function generateRandomString() {
   return final;
 }
 
+const alreadyExists = function (email) {
+  let userObjects = Object.values(users);
+  for (obj of userObjects) {
+    if (obj['email'] === email) {
+      return true
+    }
+  }
+  return false;
+  }
+
 const users = { 
   "userRandomID": {
     id: "userRandomID", 
@@ -105,7 +115,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie('user')
+  res.clearCookie('user_id')
   res.redirect(`/urls`);
 });
 
@@ -114,16 +124,32 @@ app.post("/register", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
   let newID = generateRandomString();
-  
-  users[newID] = {
-    id: newID,
-    email,
-    password
-  }
 
-  res.cookie('user_id', newID)
-  console.log(users);
-  res.redirect(`/urls`);
+  if (email !== '' && password !== '') {
+    // if(Object.values(users).includes(email))
+    if (!alreadyExists(email)) {
+
+    users[newID] = {
+        id: newID,
+        email,
+        password
+      }
+
+      res.cookie('user_id', newID)
+      console.log(users);
+      res.redirect(`/urls`);
+
+    } else {
+      const e = new Error('ERROR 400! Email already exists.');
+      e.status = 400;
+      throw e;
+    }
+  } else {
+    const e = new Error('ERROR 400! Empty email or password.');
+    e.status = 400;
+    throw e;
+  }
+  
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
