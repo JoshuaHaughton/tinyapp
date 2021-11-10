@@ -16,6 +16,19 @@ function generateRandomString() {
   return final;
 }
 
+const users = { 
+  "userRandomID": {
+    id: "userRandomID", 
+    email: "user@example.com", 
+    password: "purple-monkey-dinosaur"
+  },
+ "user2RandomID": {
+    id: "user2RandomID", 
+    email: "user2@example.com", 
+    password: "dishwasher-funk"
+  }
+}
+
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -93,6 +106,23 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie('username')
+  res.redirect(`/urls`);
+});
+
+app.post("/register", (req, res) => {
+  console.log(req.body);
+  let email = req.body.email;
+  let password = req.body.password;
+  let newID = generateRandomString();
+  
+  users[newID] = {
+    id: newID,
+    email,
+    password
+  }
+
+  res.cookie('user_id', newID)
+  console.log(users);
   res.redirect(`/urls`);
 });
 
