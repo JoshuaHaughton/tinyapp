@@ -64,6 +64,18 @@ app.get("/urls/new", (req, res) => {
   res.render("urls_new", templateVars);
 });
 
+app.get('/register', (req, res) => {
+  const templateVars = {
+    urls: urlDatabase
+  };
+  if (req.cookies) {
+    if (req.cookies['username']) {
+        templateVars['username'] = req.cookies['username'];
+      }
+  }
+  res.render('register', templateVars);
+})
+
 
 app.post("/urls", (req, res) => {
   console.log(req.body);
