@@ -15,11 +15,13 @@ function generateRandomString() {
   let final = `${out1}${out2}${out3}${out4}${out5}${out6}`
   return final;
 }
-
+let user;
 const alreadyExists = function (email) {
   let userObjects = Object.values(users);
+  console.log('alreadyExists thrugh users: ', users);
   for (obj of userObjects) {
     if (obj['email'] === email) {
+      user = obj;
       return true
     }
   }
@@ -123,9 +125,31 @@ app.post("/urls", (req, res) => {
 
 app.post("/login", (req, res) => {
   let email = req.body.email;
-  res.cookie('email', email);
+  let password = req.body.password;
+  
+
+  if (!alreadyExists(email)){
+    const e = new Error("ERROR 400! Email doesn't exist.");
+    e.status = 403;
+    throw e;
+  } else {
+    if (password === user['password']) {
+      const id = user['id'];
+      console.log('BINGO!');
+      console.log('user: ', user);
+      res.cookie('user_id', id)
+      res.redirect(`/urls`);
+    } else {
+      const e = new Error('ERROR 400! Incorrect Password');
+      e.status = 403;
+      throw e;
+
+    }
+    
+  }
+
   console.log(req.body);
-  res.redirect(`/urls`);
+  
 });
 
 app.post("/logout", (req, res) => {
@@ -140,7 +164,6 @@ app.post("/register", (req, res) => {
   let newID = generateRandomString();
 
   if (email !== '' && password !== '') {
-    // if(Object.values(users).includes(email))
     if (!alreadyExists(email)) {
 
     users[newID] = {
