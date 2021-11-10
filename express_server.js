@@ -6,16 +6,15 @@ const PORT = 8080; // default port 8080
 
 function generateRandomString() {
   let out = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 1, 2, 3, 4, 5, 6, 7, 8, 9]
-  let out1 = out[(Math.floor((Math.random() * 35)))]
-  let out2 = out[(Math.floor((Math.random() * 35)))]
-  let out3 = out[(Math.floor((Math.random() * 35)))]
-  let out4 = out[(Math.floor((Math.random() * 35)))]
-  let out5 = out[(Math.floor((Math.random() * 35)))]
-  let out6 = out[(Math.floor((Math.random() * 35)))]
-  let final = `${out1}${out2}${out3}${out4}${out5}${out6}`
+  let final = '';
+  for (i = 0; i < 6; i++) {
+    final += out[(Math.floor((Math.random() * 35)))];
+  } 
   return final;
 }
+
 let user;
+
 const alreadyExists = function (email) {
   let userObjects = Object.values(users);
   console.log('alreadyExists thrugh users: ', users);
@@ -26,6 +25,22 @@ const alreadyExists = function (email) {
     }
   }
   return false;
+  }
+
+  const showUserOpenLinks = (urlDatabase, req) => {
+    let out = {};
+
+    for (key in urlDatabase) {
+      console.log(key);
+      if (urlDatabase[key]['userID'] === '') {
+        out[key] = urlDatabase[key]['longURL'];
+
+      } else if (urlDatabase[key]['userID'] === req.cookies['user_id']) {
+        out[key] = urlDatabase[key]['longURL'];
+      }
+    }
+    console.log(out);
+    return out;
   }
 
 const users = { 
@@ -42,13 +57,23 @@ const users = {
 }
 
 const bodyParser = require("body-parser");
+const e = require("express");
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.set('view engine', 'ejs')
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+
+  "b2xVn2": {
+    longURL: "http://www.lighthouselabs.ca",
+    userID: ""
+  },
+
+  "9sm5xK": {
+    longURL: "http://www.google.com",
+    userID: ""
+  } 
+
 };
 
 app.get("/", (req, res) => {
@@ -65,7 +90,7 @@ app.get("/hello", (req, res) => {
 
 app.get('/urls', (req, res) => {
   const templateVars = {
-    urls: urlDatabase
+    urls: showUserOpenLinks(urlDatabase, req)
   };
   if (req.cookies) {
     if (req.cookies['user_id']) {
@@ -77,21 +102,23 @@ app.get('/urls', (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const templateVars = {
-    urls: urlDatabase
+    urls: showUserOpenLinks(urlDatabase, req)
   }
   console.log(req.cookies);
-  if (req.cookies) {
+
     if (req.cookies['user_id']) {
         templateVars['user'] = users[req.cookies['user_id']];
-      }
+        res.render("urls_new", templateVars);
+      }else {
+    res.redirect('/login')
   }
+
   
-  res.render("urls_new", templateVars);
 });
 
 app.get("/login", (req, res) => {
   const templateVars = {
-    urls: urlDatabase
+    urls: showUserOpenLinks(urlDatabase, req)
   }
   console.log(req.cookies);
   if (req.cookies) {
@@ -105,7 +132,7 @@ app.get("/login", (req, res) => {
 
 app.get('/register', (req, res) => {
   const templateVars = {
-    urls: urlDatabase
+    urls: showUserOpenLinks(urlDatabase, req)
   };
   if (req.cookies) {
     if (req.cookies['user_id']) {
@@ -117,10 +144,21 @@ app.get('/register', (req, res) => {
 
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  let short = generateRandomString();
-  urlDatabase[short] = req.body.longURL;
-  res.redirect(`/urls/${[short]}`);
+  if (req.cookies['user_id']) {
+    console.log(req.body);
+    let short = generateRandomString();
+    let obj = {
+      longURL: req.body.longURL,
+      userID: req.cookies['user_id']
+    }
+    urlDatabase[short] = obj;
+    res.redirect(`/urls/${[short]}`);
+  } else {
+    const e = new Error('ERROR! You must be logged in to use this feature');
+    e.status = 403;
+    throw e;
+  }
+  
 });
 
 app.post("/login", (req, res) => {
@@ -129,7 +167,7 @@ app.post("/login", (req, res) => {
   
 
   if (!alreadyExists(email)){
-    const e = new Error("ERROR 400! Email doesn't exist.");
+    const e = new Error("ERROR 403! Email doesn't exist.");
     e.status = 403;
     throw e;
   } else {
@@ -140,7 +178,7 @@ app.post("/login", (req, res) => {
       res.cookie('user_id', id)
       res.redirect(`/urls`);
     } else {
-      const e = new Error('ERROR 400! Incorrect Password');
+      const e = new Error('ERROR 403! Incorrect Password');
       e.status = 403;
       throw e;
 
@@ -196,7 +234,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 
 app.post("/urls/:shortURL/update", (req, res) => {
   let newURL = req.body.newURL;
-  urlDatabase[req.params.shortURL] = newURL;
+  urlDatabase[req.params.shortURL]['longURL'] = newURL;
   res.redirect(`/urls`);
 });
 
@@ -204,7 +242,7 @@ app.post("/urls/:shortURL/update", (req, res) => {
 app.get("/urls/:shortURL", (req, res) => {
   const templateVars = { 
     shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL] 
+    longURL: urlDatabase[req.params.shortURL]['longURL']
 };
 
 if (req.cookies) {
@@ -217,7 +255,7 @@ if (req.cookies) {
 
 
 app.get("/u/:shortURL", (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL]
+  const longURL = urlDatabase[req.params.shortURL]['longURL']
   res.redirect(longURL);
 });
 
