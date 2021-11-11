@@ -32,10 +32,12 @@ const alreadyExists = function (email) {
 
     for (key in urlDatabase) {
       console.log(key);
-      if (urlDatabase[key]['userID'] === '') {
-        out[key] = urlDatabase[key]['longURL'];
 
-      } else if (urlDatabase[key]['userID'] === req.cookies['user_id']) {
+      // if (urlDatabase[key]['userID'] === '') {
+      //   out[key] = urlDatabase[key]['longURL'];
+
+      // } 
+      if (urlDatabase[key]['userID'] === req.cookies['user_id']) {
         out[key] = urlDatabase[key]['longURL'];
       }
     }
@@ -92,11 +94,13 @@ app.get('/urls', (req, res) => {
   const templateVars = {
     urls: showUserOpenLinks(urlDatabase, req)
   };
-  if (req.cookies) {
+  
     if (req.cookies['user_id']) {
         templateVars['user'] = users[req.cookies['user_id']];
+      } else {
+        delete templateVars['user']
       }
-  }
+
   res.render('urls_index', templateVars);
 })
 
@@ -109,7 +113,7 @@ app.get("/urls/new", (req, res) => {
     if (req.cookies['user_id']) {
         templateVars['user'] = users[req.cookies['user_id']];
         res.render("urls_new", templateVars);
-      }else {
+      } else {
     res.redirect('/login')
   }
 
@@ -191,6 +195,7 @@ app.post("/login", (req, res) => {
 
 app.post("/logout", (req, res) => {
   res.clearCookie('user_id')
+  console.log(req.body);
   res.redirect(`/urls`);
 });
 
@@ -227,8 +232,17 @@ app.post("/register", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
-  delete urlDatabase[req.params.shortURL]
-  res.redirect(`/urls`);
+
+
+  if (req.cookies['user_id'] === urlDatabase[req.params.shortURL]['userID'] || urlDatabase[req.params.shortURL]['userID'] === '') {
+    
+    delete urlDatabase[req.params.shortURL]
+    res.redirect(`/urls`);
+} else {
+  const e = new Error("<h2>You don't own this URL!</h2>")
+  e.status = 403
+  throw e;
+}
 });
 
 app.post("/urls/:shortURL/update", (req, res) => {
@@ -264,14 +278,11 @@ app.get("/urls/:shortURL", (req, res) => {
     e.status = 403;
     throw e;
   }
-
-} else {
-  res.redirect('/login')
-}
   
+  }
 
+})
 
-});
 
 
 app.get("/u/:shortURL", (req, res) => {
