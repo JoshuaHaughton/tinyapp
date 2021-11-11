@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 app.use(cookieParser())
+const bcrypt = require('bcryptjs');
 const PORT = 8080; // default port 8080
 
 function generateRandomString() {
@@ -21,6 +22,7 @@ const alreadyExists = function (email) {
   for (obj of userObjects) {
     if (obj['email'] === email) {
       user = obj;
+      console.log(user);
       return true
     }
   }
@@ -167,6 +169,7 @@ app.post("/urls", (req, res) => {
 app.post("/login", (req, res) => {
   let email = req.body.email;
   let password = req.body.password;
+ 
   
 
   if (!alreadyExists(email)){
@@ -174,7 +177,7 @@ app.post("/login", (req, res) => {
     e.status = 403;
     throw e;
   } else {
-    if (password === user['password']) {
+    if (bcrypt.compareSync(password, user['password'])) {
       const id = user['id'];
       console.log('BINGO!');
       console.log('user: ', user);
@@ -188,8 +191,6 @@ app.post("/login", (req, res) => {
     }
     
   }
-
-  console.log(req.body);
   
 });
 
@@ -201,8 +202,10 @@ app.post("/logout", (req, res) => {
 
 app.post("/register", (req, res) => {
   console.log(req.body);
-  let email = req.body.email;
-  let password = req.body.password;
+  const email = req.body.email;
+  const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10)
+
   let newID = generateRandomString();
 
   if (email !== '' && password !== '') {
@@ -211,7 +214,7 @@ app.post("/register", (req, res) => {
     users[newID] = {
         id: newID,
         email,
-        password
+        password: hashedPassword
       }
 
       res.cookie('user_id', newID)
