@@ -253,7 +253,9 @@ app.post("/urls/:shortURL/update", (req, res) => {
 
 
 app.get("/urls/:shortURL", (req, res) => {
-  if (req.cookies['user_id']) {
+  if (!req.cookies['user_id']) {
+    res.render("urls_show");
+  };
 
     if (!urlDatabase[req.params.shortURL]) {
       const e = new Error('ERROR! This short URL does not exist')
@@ -279,7 +281,7 @@ app.get("/urls/:shortURL", (req, res) => {
     throw e;
   }
   
-  }
+
 
 })
 
