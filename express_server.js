@@ -1,6 +1,8 @@
 const { getUserByEmail } = require('./helpers')
 const express = require("express");
 const app = express();
+const methodOverride = require('method-override')
+app.use(methodOverride('_method'))
 const cookieParser = require("cookie-parser");
 const cookieSession = require('cookie-session')
 app.use(cookieParser())
@@ -150,6 +152,7 @@ app.get('/register', (req, res) => {
 
 
 app.post("/urls", (req, res) => {
+
   if (req.session.user_id) {
     let short = generateRandomString();
     let obj = {
@@ -218,7 +221,7 @@ app.post("/register", (req, res) => {
         password: hashedPassword
       }
 
-      // res.cookie('user_id', newID)
+
       req.session.user_id = newID;
       console.log(users);
       res.redirect(`/urls`);
@@ -236,11 +239,11 @@ app.post("/register", (req, res) => {
   
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL/delete", (req, res) => {
 
 
   if (req.session.user_id === urlDatabase[req.params.shortURL]['userID'] || urlDatabase[req.params.shortURL]['userID'] === '') {
-    
+    console.log(req);
     delete urlDatabase[req.params.shortURL]
     res.redirect(`/urls`);
 } else {
@@ -250,7 +253,7 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 }
 });
 
-app.post("/urls/:shortURL/update", (req, res) => {
+app.put("/urls/:shortURL/update", (req, res) => {
   let newURL = req.body.newURL;
   urlDatabase[req.params.shortURL]['longURL'] = newURL;
   res.redirect(`/urls`);
