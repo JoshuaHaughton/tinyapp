@@ -1,4 +1,6 @@
-const { getUserByEmail } = require("./helpers");
+//REQUIRES/INSTALLS/SET-----------------------------
+
+const { getUserByEmail, generateRandomString, showUserOpenLinks } = require("./helpers");
 
 const express = require("express");
 const app = express();
@@ -23,29 +25,9 @@ app.use(
   }),
 );
 
-function generateRandomString() {
-  let out = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
-  let final = "";
-  for (i = 0; i < 6; i++) {
-    final += out[Math.floor(Math.random() * 35)];
-  }
-  return final;
-}
-
-const showUserOpenLinks = (urlDatabase, req) => {
-  let out = {};
-
-  for (key in urlDatabase) {
-    console.log(key);
-
-    if (urlDatabase[key]["userID"] === req.session.user_id) {
-      out[key] = urlDatabase[key]["longURL"];
-    }
-  }
-  console.log(out);
-  return out;
-};
+// ---------------------------------------------------
+// BEGINNING OF DATABASES
 
 const users = {
 
@@ -75,6 +57,12 @@ const urlDatabase = {
     userID: "",
   },
 };
+
+
+// END OF DATABASES
+// ---------------------------------------------------
+//BEGINNING OF ROUTES
+
 
 app.get("/", (req, res) => {
   res.send("Hello!");
@@ -189,8 +177,8 @@ app.post("/logout", (req, res) => {
   res.redirect(`/urls`);
 });
 
+
 app.post("/register", (req, res) => {
-  console.log(req.body);
   const email = req.body.email;
   const password = req.body.password;
   const hashedPassword = bcrypt.hashSync(password, 10);
@@ -206,7 +194,6 @@ app.post("/register", (req, res) => {
       };
 
       req.session.user_id = newID;
-      console.log(users);
       res.redirect(`/urls`);
     } else {
       const e = new Error("ERROR 400! Email already exists.");
@@ -225,7 +212,6 @@ app.delete("/urls/:shortURL/delete", (req, res) => {
     req.session.user_id === urlDatabase[req.params.shortURL]["userID"] ||
     urlDatabase[req.params.shortURL]["userID"] === ""
   ) {
-    console.log(req);
     delete urlDatabase[req.params.shortURL];
     res.redirect(`/urls`);
   } else {
