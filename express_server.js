@@ -7,7 +7,6 @@ const app = express();
 const methodOverride = require("method-override");
 
 const bodyParser = require("body-parser");
-const cookieParser = require("cookie-parser");
 const cookieSession = require("cookie-session");
 
 const bcrypt = require("bcryptjs");
@@ -15,7 +14,6 @@ const PORT = 8080; // default port 8080
 
 app.set("view engine", "ejs");
 app.use(methodOverride("_method"));
-app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(
