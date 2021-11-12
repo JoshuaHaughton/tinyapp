@@ -1,4 +1,4 @@
-const { getUsersByEmail } = require('./helpers')
+const { getUserByEmail } = require('./helpers')
 const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
@@ -172,13 +172,13 @@ app.post("/login", (req, res) => {
  
   
 
-  if (!getUsersByEmail(email, users)){
+  if (!getUserByEmail(email, users)){
     const e = new Error("ERROR 403! Email doesn't exist.");
     e.status = 403;
     throw e;
   } else {
-    if (bcrypt.compareSync(password, getUsersByEmail(email, users)['password'])) {
-      const id = getUsersByEmail(email, users)['id'];
+    if (bcrypt.compareSync(password, getUserByEmail(email, users)['password'])) {
+      const id = getUserByEmail(email, users)['id'];
       console.log('BINGO!');
       req.session.user_id = id;
       // res.cookie('user_id', id)
@@ -210,7 +210,7 @@ app.post("/register", (req, res) => {
   let newID = generateRandomString();
 
   if (email !== '' && password !== '') {
-    if (!getUsersByEmail(email, users)) {
+    if (!getUserByEmail(email, users)) {
 
     users[newID] = {
         id: newID,

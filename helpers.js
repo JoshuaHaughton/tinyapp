@@ -1,14 +1,12 @@
-const getUsersByEmail = function (email, users) {
+const getUserByEmail = function (email, users) {
   let userObjects = Object.values(users);
   console.log('alreadyExists thrugh users: ', users);
   for (obj of userObjects) {
     if (obj['email'] === email) {
-      user = obj;
-      console.log(user);
       return obj
     }
   }
-  return false;
+  return undefined;
   }
 
-  module.exports = { getUsersByEmail }
+  module.exports = { getUserByEmail }
